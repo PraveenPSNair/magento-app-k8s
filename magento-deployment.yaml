@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: magento
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: magento
+  template:
+    metadata:
+      labels:
+        app: magento
+    spec:
+      containers:
+      - name: magento
+        image: praveenps18/magento-app:v1.0
+        ports:
+          - containerPort: 8080
+        env:
+          # Database variables (your Cloud SQL for MySQL)
+          - name: DB_HOST
+            value: "10.128.0.44" # The internal IP of your master node
+          - name: DB_PORT
+            value: "3306"
+          - name: DB_NAME
+            value: "magento_db"
+          - name: DB_USER
+            value: "myuser"
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: magento-db-secret
+                key: password
+          # OpenSearch variables
+          - name: OPENSEARCH_HOST
+            value: "opensearch-service" # This will be the name of your Kubernetes Service for OpenSearch
+          - name: OPENSEARCH_PORT
+            value: "9200"
+      imagePullSecrets:
+      - name: regcred
