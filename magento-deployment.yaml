@@ -13,14 +13,15 @@ spec:
         app: magento
     spec:
       containers:
+      # Magento Application Container
       - name: magento
         image: praveenps18/magento-app:v1.0
         ports:
           - containerPort: 8080
         env:
-          # Database variables (your Cloud SQL for MySQL)
+          # Database variables. The host is now localhost because the proxy is a sidecar.
           - name: DB_HOST
-            value: "10.128.0.44" # The internal IP of your master node
+            value: "127.0.0.1" 
           - name: DB_PORT
             value: "3306"
           - name: DB_NAME
@@ -34,8 +35,16 @@ spec:
                 key: password
           # OpenSearch variables
           - name: OPENSEARCH_HOST
-            value: "opensearch-service" # This will be the name of your Kubernetes Service for OpenSearch
+            value: "opensearch-service"
           - name: OPENSEARCH_PORT
             value: "9200"
+      
+      # Cloud SQL Proxy Sidecar Container
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.0
+        command:
+          - "/cloud-sql-proxy"
+          - "--port=3306"
+          - "my-infracreation:us-central1:magento"
       imagePullSecrets:
       - name: regcred
