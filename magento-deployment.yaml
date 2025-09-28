@@ -13,15 +13,13 @@ spec:
         app: magento
     spec:
       containers:
-      # Magento Application Container
       - name: magento
-        image: praveenps18/magento-app:v1.0
+        image: praveenps18/magento-app:v5
         ports:
           - containerPort: 8080
         env:
-          # Database variables. The host is now localhost because the proxy is a sidecar.
           - name: DB_HOST
-            value: "127.0.0.1" 
+            value: "127.0.0.1"
           - name: DB_PORT
             value: "3306"
           - name: DB_NAME
@@ -33,18 +31,22 @@ spec:
               secretKeyRef:
                 name: magento-db-secret
                 key: password
-          # OpenSearch variables
-          - name: OPENSEARCH_HOST
-            value: "opensearch-service"
-          - name: OPENSEARCH_PORT
-            value: "9200"
       
-      # Cloud SQL Proxy Sidecar Container
+      # Cloud SQL Proxy with service account key
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.0
         command:
           - "/cloud-sql-proxy"
+          - "--structured-logs"
           - "--port=3306"
+          - "--address=127.0.0.1"
+          - "--credentials-file=/secrets/cloudsql/service-account.json"
           - "my-infracreation:us-central1:magento"
-      imagePullSecrets:
-      - name: regcred
+        volumeMounts:
+          - name: cloudsql-service-account
+            mountPath: /secrets/cloudsql
+            readOnly: true
+      volumes:
+        - name: cloudsql-service-account
+          secret:
+            secretName: cloudsql-service-account

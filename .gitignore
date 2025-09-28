@@ -1,0 +1,4 @@
+# .gitignore
+*.json
+!package.json
+!composer.json
